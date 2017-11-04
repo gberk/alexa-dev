@@ -1,2 +1,0 @@
-FlipIntent flip
-FlipIntent do a flip
