@@ -8,12 +8,9 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
   console.log('a user connected');
-
-  //generate random 3 words
-  
 });
 
-http.listen(3000, function(){
+http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
 });
 
@@ -21,10 +18,5 @@ app.get('/flip', function(req, res){
 	io.emit('flip', "FLIPPED");
 	res.end();
 });
-
-// app.get('/newSession', function(req, res){
-// 	//return 3 random words to Alexa
-// 	//display same words on browser
-// })
 
 
