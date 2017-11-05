@@ -22,25 +22,29 @@ app.get('/', function(req, res){
 //   console.log('a user connected');
 // });
 
-http.listen(process.env.PORT || 3000, function(){
-  console.log('listening on *:3000');
-});
-
 // app.get('/flip', function(req, res){
 // 	io.emit('flip', "FLIPPED");
 // 	res.end();
 // });
 
+http.listen(process.env.PORT || 3000, function(){
+  console.log('listening on *:3000');
+});
+
+
+
 app.post('/score', function(req, res){
-	Score.create({score: req.body.score}, function(err){
+	Score.remove({},function(){
+		Score.create({score: req.body.score}, function(err){
 		console.log(err);
+		});
+		res.sendStatus(200);
 	});
-	res.sendStatus(200);
-})
+});
+
 
 app.get('/score', function(req, res){
 	Score.findOne(function(err, doc){
-		console.log(err);
 		res.send(doc);
 	})
 });
