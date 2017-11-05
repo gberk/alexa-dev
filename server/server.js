@@ -8,9 +8,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 require('dotenv').config();
 
-
-
-mongoose.connect("mongodb://lynkr:dogpatch@test-shard-00-00-mlsxy.mongodb.net:27017,test-shard-00-01-mlsxy.mongodb.net:27017,test-shard-00-02-mlsxy.mongodb.net:27017/test?ssl=true&replicaSet=test-shard-0&authSource=admin", {useMongoClient: true}, function(err) {
+mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
 	if (err) {
 		console.log("Mongoose error: " + err);
 	} else {
@@ -43,11 +41,12 @@ http.listen(process.env.PORT || 3000, function(){
 
 app.post('/score', function(req, res){
 	Score.remove({},function(){
-		Score.create({score: req.body.score}, function(err){
+		Score.create({score: req.body.score}, function(err, score){
 			if (!err) console.log("Saved score: " + req.body.score);
+			res.send(score);
 		});
 	});
-	res.sendStatus(200);
+	
 });
 
 
