@@ -1,6 +1,10 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var mongoose = require('mongoose');
+require('dotenv').config();
+
+mongoose.connect(process.env.DB_URI);
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -18,5 +22,3 @@ app.get('/flip', function(req, res){
 	io.emit('flip', "FLIPPED");
 	res.end();
 });
-
-
