@@ -11,6 +11,11 @@ require('dotenv').config();
 
 
 mongoose.connect(process.env.DB_URI);
+var db = mongoose.connection;
+db.once('open', function() {
+  console.log("Connected successfully to database");
+});
+
 var schema = new mongoose.Schema({score: Number});
 var Score = mongoose.model('Score', schema);
 
@@ -36,7 +41,7 @@ http.listen(process.env.PORT || 3000, function(){
 app.post('/score', function(req, res){
 	Score.remove({},function(){
 		Score.create({score: req.body.score}, function(err){
-		console.log(err);
+			if (!err) console.log("Saved score: " + req.body.score);
 		});
 		res.sendStatus(200);
 	});
