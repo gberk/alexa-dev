@@ -10,7 +10,7 @@ require('dotenv').config();
 
 
 
-mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
+mongoose.connect("mongodb://lynkr:dogpatch@test-shard-00-00-mlsxy.mongodb.net:27017,test-shard-00-01-mlsxy.mongodb.net:27017,test-shard-00-02-mlsxy.mongodb.net:27017/test?ssl=true&replicaSet=test-shard-0&authSource=admin", {useMongoClient: true}, function(err) {
 	if (err) {
 		console.log("Mongoose error: " + err);
 	} else {
@@ -46,8 +46,8 @@ app.post('/score', function(req, res){
 		Score.create({score: req.body.score}, function(err){
 			if (!err) console.log("Saved score: " + req.body.score);
 		});
-		res.sendStatus(200);
 	});
+	res.sendStatus(200);
 });
 
 
