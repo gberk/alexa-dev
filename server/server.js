@@ -10,10 +10,13 @@ require('dotenv').config();
 
 
 
-mongoose.connect(process.env.DB_URI);
-var db = mongoose.connection;
-db.once('open', function() {
-  console.log("Connected successfully to database");
+mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
+	if (err) {
+		console.log("Mongoose error: " + err);
+	} else {
+		database = mongoose.connection;
+		console.log("Successfully connected to database");
+	}
 });
 
 var schema = new mongoose.Schema({score: Number});
