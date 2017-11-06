@@ -30,8 +30,8 @@ io.on('connection',function(socket){
 		var name = gameNames[gameNum];
 		var game = new Game({name: name});
 		console.log('Starting game ' + name);
-		game.save(function(err){
-			if(!err){
+		game.save()
+			.then(function(game){
 				socket.join(name);
 				gameNum++;
 				socket.emit('gameName', name)
@@ -39,9 +39,9 @@ io.on('connection',function(socket){
 					console.log("Game " + name + " ended");
 					game.remove();
 				});
-			}
+			})
+			.catch(err)
 		});
-	})
 });
 
 /* App routes */
@@ -53,7 +53,6 @@ app.get('/', function(req, res){
 app.post('/score', function(req, res){
 	var name = req.body.name;
 	var score = req.body.score;
-	console.log("Looking for game " + name);
 	Game.findOne({name: name},function(err,game){
 		game.score = score;
 		game.save();
