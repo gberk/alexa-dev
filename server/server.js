@@ -1,19 +1,29 @@
+
+'use strict';
+
+var path = require('path');
+
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var mongoose = require('mongoose');
+
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 require('dotenv').config();
 
-mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
+// Connection to MongoDB Altas via mongoose
+var mongoose = require('mongoose');
+var uri = process.env.DB_URI;
+var atlasdb;
+
+mongoose.connect(uri, {useMongoClient: true}, function(err) {
 	if (err) {
 		console.log("Mongoose error: " + err);
 	} else {
-		database = mongoose.connection;
-		console.log("Successfully connected to database");
+		atlasdb = mongoose.connection;
+		console.log("Successfully connected to MongoDB Atlas via mongoose");
 	}
 });
 
@@ -21,7 +31,7 @@ var schema = new mongoose.Schema({score: Number});
 var Score = mongoose.model('Score', schema);
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(path.resolve('client/index.html'));
 });
 
 // io.on('connection', function(socket){
