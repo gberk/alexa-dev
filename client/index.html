@@ -1,13 +1,17 @@
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!DOCTYPE html>
+
 
 <!-- jQuery library -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 <!-- Latest compiled JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 <script src="/socket.io/socket.io.js"></script>
+
+<script src='js/app.js'></script>
+
 <script>
   $(function () {
     var socket = io();
@@ -44,7 +48,22 @@
 </div>
 
 <div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <button type="button" class="btn btn-default" onclick="generateNumber();">Generate Number</button>
+    </div>
+  </div>
+  <br/>
+  <div class="row">
+    <div class="col-lg-12">
+      <span id="numberPlaceholder"></span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
   <ul id="messages"></ul>
 </div>
+
 </body>
 </html>

@@ -3,9 +3,12 @@
 
 var path = require('path');
 
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
+app.use(express.static('client'));
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
@@ -18,6 +21,9 @@ var mongoose = require('mongoose');
 var uri = process.env.DB_URI;
 var atlasdb;
 
+var Balance = require(path.resolve("server/models/balanceSchema.js"));
+var Score = require(path.resolve("server/models/scoreSchema.js"));
+
 mongoose.connect(uri, {useMongoClient: true}, function(err) {
 	if (err) {
 		console.log("Mongoose error: " + err);
@@ -27,11 +33,8 @@ mongoose.connect(uri, {useMongoClient: true}, function(err) {
 	}
 });
 
-var schema = new mongoose.Schema({score: Number});
-var Score = mongoose.model('Score', schema);
-
 app.get('/', function(req, res){
-  res.sendFile(path.resolve('client/index.html'));
+	res.sendFile(path.resolve('client/index.html'));
 });
 
 // io.on('connection', function(socket){
@@ -43,11 +46,10 @@ app.get('/', function(req, res){
 // 	res.end();
 // });
 
-http.listen(process.env.PORT || 3000, function(){
-  console.log('listening on *:3000');
-});
-
-
+app.get('/number', function(req, res) {
+	var number = document.getElementById("numberPlaceholder").value;
+	res.send(number);
+})
 
 app.post('/score', function(req, res){
 	Score.remove({},function(){
@@ -56,12 +58,14 @@ app.post('/score', function(req, res){
 			res.send(score);
 		});
 	});
-	
 });
-
 
 app.get('/score', function(req, res){
 	Score.findOne(function(err, doc){
 		res.send(doc);
 	})
+});
+
+http.listen(process.env.PORT || 3000, function(){
+	console.log('listening on *:3000');
 });
