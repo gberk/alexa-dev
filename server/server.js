@@ -2,63 +2,65 @@
 'use strict';
 
 var path = require('path');
-
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var mongoose = require('mongoose');
+var Game = require('./models/game');
+require('dotenv').config();
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-require('dotenv').config();
+var gameNum = 0;
+var gameNames = ['apple','banana','pear'];
 
-// Connection to MongoDB Altas via mongoose
-var mongoose = require('mongoose');
-var uri = process.env.DB_URI;
-var atlasdb;
-
-mongoose.connect(uri, {useMongoClient: true}, function(err) {
-	if (err) {
-		console.log("Mongoose error: " + err);
-	} else {
-		atlasdb = mongoose.connection;
-		console.log("Successfully connected to MongoDB Atlas via mongoose");
-	}
+mongoose.Promise = global.Promise;
+mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
+	if (err) console.log("Mongoose error: " + err);
+	else console.log("Connected to db");
 });
 
-var schema = new mongoose.Schema({score: Number});
-var Score = mongoose.model('Score', schema);
+http.listen(process.env.PORT || 3000);
+
+io.on('connection',function(socket){
+	console.log("User connected");
+	socket.on('newGame',function(){
+		var name = gameNames[gameNum];
+		var game = new Game({name: name});
+		console.log('Starting game ' + name);
+		game.save(function(err){
+			if(!err){
+				socket.join(name);
+				gameNum++;
+				socket.emit('gameName', name)
+				socket.on('disconnect',function(){
+					console.log("Game " + name + " ended");
+					game.remove();
+				});
+			}
+		});
+	})
+});
+
+/* App routes */
 
 app.get('/', function(req, res){
-  res.sendFile(path.resolve('client/index.html'));
+	res.sendFile(path.resolve('client/index.html'));
 });
-
-// io.on('connection', function(socket){
-//   console.log('a user connected');
-// });
-
-// app.get('/flip', function(req, res){
-// 	io.emit('flip', "FLIPPED");
-// 	res.end();
-// });
-
-http.listen(process.env.PORT || 3000, function(){
-  console.log('listening on *:3000');
-});
-
-
 
 app.post('/score', function(req, res){
-	Score.remove({},function(){
-		Score.create({score: req.body.score}, function(err, score){
-			if (!err) console.log("Saved score: " + req.body.score);
-			res.send(score);
-		});
-	});
-	
+	var name = req.body.name;
+	var score = req.body.score;
+	console.log("Looking for game " + name);
+	Game.findOne({name: name},function(err,game){
+		game.score = score;
+		game.save();
+		io.to(name).emit('score',score);
+	})
+	res.end();
 });
-
 
 app.get('/score', function(req, res){
 	Score.findOne(function(err, doc){
