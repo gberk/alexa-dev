@@ -62,8 +62,8 @@ app.post('/score', function(req, res){
 	res.end();
 });
 
-app.get('/score', function(req, res){
-	Score.findOne(function(err, doc){
-		res.send(doc);
-	})
+app.get('/score/:name', function(req, res){
+	Game.findOne({name:req.params.name}, function(err,game){
+		res.send(game);
+	});
 });
