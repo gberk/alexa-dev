@@ -26,7 +26,7 @@ http.listen(process.env.PORT || 3000);
 
 io.on('connection',function(socket){
 	console.log("User connected");
-	socket.on('newGame',function(){
+	socket.on('startSession',function(){
 		var name = gameNames[gameNum];
 		var game = new Game({name: name});
 		console.log('Starting game ' + name);
@@ -34,13 +34,12 @@ io.on('connection',function(socket){
 			.then(function(game){
 				socket.join(name);
 				gameNum++;
-				socket.emit('gameName', name)
+				socket.emit('gameName', name);
 				socket.on('disconnect',function(){
 					console.log("Game " + name + " ended");
 					game.remove();
 				});
 			})
-			.catch(err)
 		});
 });
 
