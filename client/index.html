@@ -13,7 +13,7 @@
     var socket = io();
     socket.on('connect', function(){
       console.log('Connected');
-      socket.emit('newGame', 'test');
+      socket.emit('startSession', 'test');
     });
     socket.on('gameName', function(name){
       console.log("Game name is " + name)

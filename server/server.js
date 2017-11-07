@@ -14,7 +14,7 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 var gameNum = 0;
-var gameNames = ['apple','banana','pear'];
+var gameNames = ['donkey','frog','bear'];
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
