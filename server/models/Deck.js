@@ -1,5 +1,5 @@
 var suits = ['d', 'c', 'h', 's'];
-var values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+var values = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
 var deck = [];
 
 // Creates a deck of cards from suits and values array
@@ -31,16 +31,21 @@ var shuffle = function(array) {
 class Deck{
     constructor(){
         this.cards = createDeck();
+        return this;
     }
 
     shuffle(){
         this.cards = shuffle(this.cards);
+        return this;
     }
 
     deal(number, bottom){
+        if(!number) number = 1;
+
         if(number > this.cards.length){
             throw new Error("Ran out of cards");
         }
+
         var dealt = [];
         if(bottom){
             var last = this.cards.length;
