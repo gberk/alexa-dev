@@ -6,7 +6,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var mongoose = require('mongoose');
-var Game = require('./models/game');
+var Blackjack = require('./models/Blackjack');
 require('dotenv').config();
 
 var bodyParser = require('body-parser');
@@ -49,15 +49,23 @@ app.get('/', function(req, res){
 	res.sendFile(path.resolve('client/index.html'));
 });
 
-app.post('/score', function(req, res){
-	var name = req.body.name;
-	var score = req.body.score;
-	Game.findOne({name: name},function(err,game){
-		game.score = score;
-		game.save();
-		io.to(name).emit('score',score);
-	})
+app.use('/blackjack/*', function(req,res,next){ 
+	Game.findOne({name: req.body.name}, function(err, game){
+		if(err) next(err);
+		else {
+			req.game = game;
+			next();
+		}
+	});
+})
+
+app.post('/blackjack/hit', function(req,res){
+	console.log(req.game);
 	res.end();
+});
+
+app.post('/blackjack/stand', function(req, res){
+
 });
 
 app.get('/score/:name', function(req, res){
@@ -65,3 +73,14 @@ app.get('/score/:name', function(req, res){
 		res.send(game);
 	});
 });
+
+// app.post('/score', function(req, res){
+// 	var name = req.body.name;
+// 	var score = req.body.score;
+// 	Game.findOne({name: name},function(err,game){
+// 		game.score = score;
+// 		game.save();
+// 		io.to(name).emit('score',score);
+// 	})
+// 	res.end();
+// });
