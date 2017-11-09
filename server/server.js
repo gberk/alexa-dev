@@ -5,7 +5,7 @@ var path = require('path');
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var mongoose = require('mongoose');
+
 var Blackjack = require('./models/Blackjack');
 require('dotenv').config();
 
@@ -13,51 +13,95 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
+
 var gameNum = 0;
-var gameNames = ['donkey','frog','bear'];
+var gameNames = ['donkey','frog','bear','dog','cat','buffalo','badger','ant','giraffe', 'elephant'];
+
+var mongoose = require('mongoose');
+var Game = require('./models/Game');
+var atlasdb;
+var uri = process.env.DB_URI;
 
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.DB_URI, {useMongoClient: true}, function(err) {
-	if (err) console.log("Mongoose error: " + err);
-	else console.log("Connected to db");
+mongoose.connect(uri, {useMongoClient: true}, function(err) {
+	if (err) {
+		console.log("Mongoose error: " + err);
+	} else {
+		atlasdb = mongoose.connection;
+		console.log("Successfully connected to MongoDB Atlas via mongoose");
+	}
 });
 
 http.listen(process.env.PORT || 3000);
 
 io.on('connection',function(socket){
-	console.log("User connected");
 	socket.on('startSession',function(){
 		var name = gameNames[gameNum];
-		var game = new Game({name: name});
-		console.log('Starting game ' + name);
-		game.save()
-			.then(function(game){
+
+		var game = new Game({
+			name: name,
+			_id: name,
+			score: 0,
+			amzUserId: ""
+		});
+
+		var found = false;
+		Game.findOne({name: name}, function(err, foundGame) {
+			if (foundGame) {
+				found = true;
+			} else {
+				found = false;
+			}
+		}).then(function(foundGame) {
+			if (found) {
 				socket.join(name);
+				console.log("Connected to existing session in db");
 				gameNum++;
 				socket.emit('gameName', name);
-				socket.on('disconnect',function(){
-					console.log("Game " + name + " ended");
-					game.remove();
-				});
-			})
+			} else {
+				game.save(function(saveErr) {
+					if (saveErr) {
+						console.log(saveErr);
+					} else {
+						console.log("New session created in db");
+					}
+				}).then(function(game){
+					socket.join(name);
+					gameNum++;
+					socket.emit('gameName', name);
+				})
+			}
+		})
+		socket.on('disconnect',function(){
+			console.log("Game " + name + " ended");
+			game.remove();
 		});
+	});
 });
 
 /* App routes */
+
+app.get('/deal/:name', function(req, res) {
+	var blackjack = new Blackjack();
+	var hand = blackjack.startNewGame();
+	console.log(hand);
+	io.to(req.params.name).emit('deal', hand);
+	res.send(hand);
+})
 
 app.get('/', function(req, res){
 	res.sendFile(path.resolve('client/index.html'));
 });
 
-app.use('/blackjack/*', function(req,res,next){ 
-	Game.findOne({name: req.body.name}, function(err, game){
-		if(err) next(err);
-		else {
-			req.game = game;
-			next();
-		}
-	});
-})
+// app.use('/blackjack/*', function(req,res,next){ 
+// 	Game.findOne({name: req.body.name}, function(err, game){
+// 		if(err) next(err);
+// 		else {
+// 			req.game = game;
+// 			next();
+// 		}
+// 	});
+// })
 
 app.post('/blackjack/hit', function(req,res){
 	console.log(req.game);

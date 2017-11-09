@@ -18,7 +18,6 @@ class BlackjackGame{
         this.currentPlayer = 0;
         this.result = null;
 
-
         //Does player have blackjack?
         if(this.handValue(this.hands[0]) == 21){
             console.log("Player has blackjack");
@@ -33,6 +32,13 @@ class BlackjackGame{
             return; //ignore tie for now
         }
 
+        var response = 
+        {
+            dealerHand: this.hands[1].concat(this.faceDownDealerCard),
+            playerHand: this.hands[0]
+        };
+
+        return response;
 
     }
 
