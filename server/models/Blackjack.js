@@ -2,24 +2,50 @@ var Deck = require('./Deck');
 
 class BlackjackGame{
 
+
     constructor(){
+        this.startNewGame();
+    }
+
+    startNewGame(){
+
         this.deck = (new Deck()).shuffle();
         this.numPlayers = 1; //Don't count the dealer
         this.hands = [];
-        this.hands[0] = this.deck.deal(2);
-        this.hands[1] = this.deck.deal(1);
+        this.hands[0] = this.deck.deal(2); //player hand
+        this.hands[1] = this.deck.deal(); //dealer hand
+        this.faceDownDealerCard = this.deck.deal();
         this.currentPlayer = 0;
+        this.result = null;
 
-        // if(value(hands[0]) == 21) console.log("Player Blackjack");
-        // if()
+
+        //Does player have blackjack?
+        if(this.handValue(this.hands[0]) == 21){
+            console.log("Player has blackjack");
+            this.result = "Player has blackjack";
+            return; //ignore tie for now
+        }
+        //Does the dealer have blackjack?
+        var futureDealerHand = this.hands[1].concat(this.faceDownDealerCard);
+        if(this.handValue(futureDealerHand) == 21){
+            console.log("Dealer has blackjack");
+            this.result = "Dealer has blackjack";
+            return; //ignore tie for now
+        }
+
+
     }
 
     //Game methods
-    hit(playerNum){
+    hit(){
         if(!valid(playerNum,'hit'))
             throw new Error("Invalid Blackjack action"); //do better errors
         else{
-
+            this.hands[0].push(this.deck.deal()[0]);
+            if(this.handValue(this.hands[0]) == 21){
+                this.currentPlayer++;
+                this.playOutDealerHand();
+            }
         }
     }
 
@@ -27,6 +53,8 @@ class BlackjackGame{
         if(!valid(playerNum,'stand'))
             throw new Error("Invalid Blackjack action"); //do better errors
         else{
+            this.currentPlayer++;
+            this.playOutDealerHand();
         }
     }
 
@@ -36,7 +64,21 @@ class BlackjackGame{
     }
 
     playOutDealerHand(){
+        this.hands[1].push(this.faceDownDealerCard[0]);
+        while(this.handValue(this.hands[1]) <=16 ){
+            this.hands[1].push(this.deck.deal()[0]);
+        }
+        if((this.handValue(this.hands[0]) > 21 && this.handValue(this.hands[1]) > 21)){
+            this.result = "Push - both busted";
+        }
 
+        return;
+
+    }
+
+    goToNextPlayer(){
+
+        //if nextPlayer == dealer 
     }
 
     //Helper methods
@@ -44,7 +86,6 @@ class BlackjackGame{
     handValue(hand){
         var value = this.handMinValue(hand);
         if(value > 21){
-            console.log("bust");
             this.currentPlayer ++;
             return value;
         }
@@ -65,11 +106,11 @@ class BlackjackGame{
         return value;
     }
 
-    cardValue(card){
-        var cardinal = card[0];
+    cardValue(card){ 
+        var cardinal = card[0]; 
         if(Number.parseInt(card))
-            return Number.parseInt(card);
-        else if(card == 'A')
+            return Number.parseInt(card); 
+        else if(cardinal == 'A')
             return 1;
         else
             return 10;
@@ -82,6 +123,7 @@ class BlackjackGame{
 
         return false;
     }
+
 }
 
 module.exports = BlackjackGame;
