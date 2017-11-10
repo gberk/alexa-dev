@@ -87,23 +87,20 @@ io.on('connection',function(socket){
 
 app.get('/deal/:name', function(req, res) {
 	var hand = blackjack.startNewGame();
-	console.log(hand);
-	io.to(req.params.name).emit('updateCards', hand);
-	res.send(hand);
+	io.to(req.params.name).emit('updateCards', blackjack);
+	res.send(blackjack);
 })
 
 app.get('/hit/:name', function(req, res) {
 	var hand = blackjack.hit();
-	console.log(hand);
-	io.to(req.params.name).emit('updateCards', hand);
-	res.send(hand);
+	io.to(req.params.name).emit('updateCards', blackjack);
+	res.send(blackjack);
 })
 
 app.get('/stand/:name', function(req, res) {
 	var hand = blackjack.stand();
-	console.log(hand);
-	io.to(req.params.name).emit('updateCards', hand);
-	res.send(hand);
+	io.to(req.params.name).emit('updateCards', blackjack);
+	res.send(blackjack);
 })
 
 app.get('/', function(req, res){
@@ -119,15 +116,6 @@ app.get('/', function(req, res){
 // 		}
 // 	});
 // })
-
-app.post('/blackjack/hit', function(req,res){
-	console.log(req.game);
-	res.end();
-});
-
-app.post('/blackjack/stand', function(req, res){
-
-});
 
 app.get('/score/:name', function(req, res){
 	Game.findOne({name:req.params.name}, function(err,game){

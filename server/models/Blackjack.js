@@ -1,155 +1,124 @@
 var Deck = require('./Deck');
+var Promise = require('bluebird');
 
-class BlackjackGame{
+function Blackjack(){
+	var deck, faceDownDealerCard;
+	var numPlayers = 1;
 
-
-    constructor(){
-        //this.startNewGame();
+	//Public methods
+	this.startNewGame= function(){
+		deck = (new Deck()).shuffle();
+		this.playerHand = {
+			cards: deck.deal(2),
+			blackjack: false,
+			bust: false
+		};
+		this.dealerHand = {
+			cards: deck.deal(),
+			blackjack:false,
+			bust: false
+		}
+		faceDownDealerCard = deck.deal();
+		this.result = null;
+		this.playerTurn = 1
+		checkBlackjack(this, faceDownDealerCard, deck).then(function(result){
+			return;
+		});
     }
 
-    buildHands(hands) {
+    this.hit = function(){
+    	if(this.result)
+    		return;
 
-        var response = 
-        {
-            dealerHand: hands[1],
-            dealerValue: this.handValue(hands[1]),
-            playerHand: hands[0],
-            playerValue: this.handValue(hands[0]),
-            gameStatus: this.gameStatus
+    	this.playerHand.cards.push(deck.deal()[0]);
 
-        };
+    	if(handValue(this.playerHand.cards) > 21 )
+    	{
+    		this.playerHand.bust = true;
+    		endGame(this, faceDownDealerCard, deck);
+    	}
 
-        return response;
-
-    }
-
-    checkBlackjack(hands) {
-        //console.log("checking for blackjack...");
-
-        var futureDealerHand = hands[1].concat(this.faceDownDealerCard);
-
-        // Did player bust?
-        if (this.handValue(hands[0]) > 21) {
-            console.log("Player has busted...");
-            this.gameStatus = "Dealer";
-            return hands;
-        }
-
-        // Did dealer bust?
-        if (this.handValue(hands[1]) > 21) {
-            console.log("Dealer has busted...");
-            this.gameStatus = "Player";
-            return hands;
-        }
-
-        // Does player have blackjack?
-        if (this.handValue(hands[0]) == 21) {
-            console.log("Player has blackjack...");
-            if (this.turn == 1) {
-                this.gameStatus = "Player";
-                return hands;
-            } else {
-                this.playOutDealerHand();
-                if (this.handValue(hands[1]) == 21) {
-                    this.gameStatus = "Push";
-                    return hands;
-                } else {
-                    this.gameStatus = "Player";
-                    return hands;
-                }
-            }
-        }
-        // Does the dealer have blackjack?
-        if(this.handValue(futureDealerHand) == 21){
-            console.log("Dealer has blackjack...");
-            this.gameStatus = "Dealer";
-            return hands;
-        }
-        return hands;
-    }
-
-    playOutDealerHand(){
-        console.log("Playing out dealer hand...");
-        this.hands[1].push(this.faceDownDealerCard[0]);
-        while(this.handValue(this.hands[1]) <=16 ){
-            this.hands[1].push(this.deck.deal()[0]);
-        }
-    }
-
-    startNewGame(){
-
-        this.deck = (new Deck()).shuffle();
-        this.numPlayers = 1; //Don't count the dealer
-        this.hands = [];
-        this.hands[0] = this.deck.deal(2); //player hand
-        this.hands[1] = this.deck.deal(); //dealer hand
-        this.faceDownDealerCard = this.deck.deal();
-        this.currentPlayer = 0;
-        this.turn = 1;
-        this.gameStatus = "InProgress";
-
-        return this.buildHands(this.checkBlackjack(this.hands));
+    	if(handValue(this.playerHand.cards) == 21){
+    		endGame(this, faceDownDealerCard, deck);
+    	};
 
     }
 
-    //Game methods
-    hit(){
-        this.turn++;
-        this.hands[0].push(this.deck.deal()[0]);
-        return this.buildHands(this.checkBlackjack(this.hands));
-        // if(!valid(playerNum,'hit'))
-        //     throw new Error("Invalid Blackjack action"); //do better errors
-        // else{
-            
-        // }
+    this.stand = function(){
+    	if(this.result)
+    		return;
+    	
+    	endGame(this, faceDownDealerCard, deck);
     }
 
-    stand(){
-        this.turn++;
-        this.playOutDealerHand();
-        
-        var finalPlayerScore = this.handValue(this.hands[0]);
-        var finalDealerScore = this.handValue(this.hands[1]);
+    //Private methods
+    var checkBlackjack = function(game, faceDownDealerCard){
+    	return new Promise(function(resolve,reject){
+		 	if (handValue(game.playerHand.cards) == 21) 
+	        {
+	            game.playerHand.blackjack = true;
+	            resolve(endGame(game, faceDownDealerCard,deck))
+	        }
+	        else
+	        {
+		    	if(handValue(game.dealerHand.cards.concat(faceDownDealerCard)) == 21){
+		    		resolve(endGame(game, faceDownDealerCard,deck));
+		    	}
+		    	resolve();
+	        }
+    	});
+    };
 
-        if (finalPlayerScore == finalDealerScore) {
-            this.gameStatus = "Push";
-        }
+    var endGame = function(game, faceDownDealerCard, deck){
+    	return new Promise(function(resolve,reject){
+			game.dealerHand.cards.push(faceDownDealerCard[0]);
 
-        if (finalPlayerScore > finalDealerScore) {
-            this.gameStatus = "Player";
-        } else {
-            this.gameStatus = "Dealer";
-        }
+			//Dealer blackjack
+	    	if(handValue(game.dealerHand.cards) == 21)
+	    	{
+	    		game.dealerHand.blackjack = true;
+	    		if(game.playerHand.blackjack)
+	    			resolve(game.result = "Push");
+	    		else
+	    			resolve(game.result = "Dealer wins - Blackjack");
+	    	}
 
-        return this.buildHands(this.checkBlackjack(this.hands));
-        // if(!valid(playerNum,'stand'))
-        //     throw new Error("Invalid Blackjack action"); //do better errors
-        // else{
-        //     this.currentPlayer++;
-        // }
-    }
+	    	//Player wins blackjack
+	    	if(game.playerHand.blackjack)
+    			resolve(game.result = "Player wins - Blackjack")
+	    	
 
-    //Game state methods
-    valid(player, action){
+	    	if(game.playerHand.bust){
+	    		resolve(game.result = "Player lose - Bust");
+	    	}else{
+	    		//Play out dealer hand
+				while(handValue(game.dealerHand.cards) <=16){
+		            game.dealerHand.cards.push(deck.deal()[0]);
+		        }
+		        var playerScore = handValue(game.playerHand.cards);
+		        var dealerScore = handValue(game.dealerHand.cards);
 
-    }
+		        if(dealerScore > 21){
+		        	game.dealerHand.bust = true;
+		        	resolve(game.result = "Player wins - dealer bust");
+		        } else if(playerScore == dealerScore){
+		        	resolve(game.result = "Push");
+		        } else if(playerScore > dealerScore){
+		        	resolve(game.result = "Player wins - closer to 21");
+		        } else {
+		        	resolve(game.result = "Dealer wins - closer to 21");
+		        }
+	    	}
+	    	});
+    };
 
-
-
-    goToNextPlayer(){
-
-        //if nextPlayer == dealer 
-    }
-
-    //Helper methods
-
-    handValue(hand){
-        var value = this.handMinValue(hand);
+    var handValue = function(hand){
+        var value = handMinValue(hand);
         if(value > 21){
             this.currentPlayer ++;
             return value;
         }
-        else if (this.containsAce(hand)){
+        else if (containsAce(hand)){
             if((value + 10) <= 21){
                 if(value + 10 == 21)
                     this.currentPlayer++;
@@ -159,14 +128,14 @@ class BlackjackGame{
         return value;
     }
 
-    handMinValue(hand){
+    var handMinValue = function(hand){
         var value = 0;
         for(const i in hand)
-            value += this.cardValue(hand[i]);
+            value += cardValue(hand[i]);
         return value;
     }
 
-    cardValue(card){ 
+    var cardValue = function(card){ 
         var cardinal = card[0]; 
         if(Number.parseInt(card))
             return Number.parseInt(card); 
@@ -176,14 +145,13 @@ class BlackjackGame{
             return 10;
     }
 
-    containsAce(hand){
+    var containsAce = function(hand){
         for (const i in hand)
-            if(this.cardValue(hand[i]) == 1)
+            if(cardValue(hand[i]) == 1)
                 return true;
 
         return false;
     }
-
 }
 
-module.exports = BlackjackGame;
+module.exports = Blackjack;

@@ -19,13 +19,11 @@
       console.log("Game name is " + name)
       $('#name').text(name);
     });
-    socket.on('updateCards', function(hands){
-      console.log(hands);
-      $('#playerHand').text(hands.playerHand);
-      $('#playerValue').text(hands.playerValue);
-      $('#dealerHand').text(hands.dealerHand);
-      $('#dealerValue').text(hands.dealerValue);
-      $('#gameStatus').text(hands.gameStatus);
+    socket.on('updateCards', function(game){
+      console.log(game);
+      $('#playerHand').text(game.playerHand.cards);
+      $('#dealerHand').text(game.dealerHand.cards);
+      $('#gameStatus').text(game.result);
     });
   });
 </script>
