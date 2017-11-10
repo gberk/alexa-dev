@@ -7,6 +7,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var Blackjack = require('./models/Blackjack');
+var blackjack = new Blackjack();
+
 require('dotenv').config();
 
 var bodyParser = require('body-parser');
@@ -19,7 +21,7 @@ var gameNames = ['donkey','frog','bear','dog','cat','buffalo','badger','ant','gi
 
 var mongoose = require('mongoose');
 var Game = require('./models/Game');
-var atlasdb;
+var db;
 var uri = process.env.DB_URI;
 
 mongoose.Promise = global.Promise;
@@ -27,12 +29,14 @@ mongoose.connect(uri, {useMongoClient: true}, function(err) {
 	if (err) {
 		console.log("Mongoose error: " + err);
 	} else {
-		atlasdb = mongoose.connection;
-		console.log("Successfully connected to MongoDB Atlas via mongoose");
+		db = mongoose.connection;
+		console.log("Successfully connected to database via mongoose");
 	}
 });
 
-http.listen(process.env.PORT || 3000);
+http.listen(process.env.PORT || 3000, function() {
+	console.log("Node server started")
+});
 
 io.on('connection',function(socket){
 	socket.on('startSession',function(){
@@ -82,10 +86,23 @@ io.on('connection',function(socket){
 /* App routes */
 
 app.get('/deal/:name', function(req, res) {
-	var blackjack = new Blackjack();
 	var hand = blackjack.startNewGame();
 	console.log(hand);
-	io.to(req.params.name).emit('deal', hand);
+	io.to(req.params.name).emit('updateCards', hand);
+	res.send(hand);
+})
+
+app.get('/hit/:name', function(req, res) {
+	var hand = blackjack.hit();
+	console.log(hand);
+	io.to(req.params.name).emit('updateCards', hand);
+	res.send(hand);
+})
+
+app.get('/stand/:name', function(req, res) {
+	var hand = blackjack.stand();
+	console.log(hand);
+	io.to(req.params.name).emit('updateCards', hand);
 	res.send(hand);
 })
 

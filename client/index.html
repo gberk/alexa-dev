@@ -19,9 +19,12 @@
       console.log("Game name is " + name)
       $('#name').text(name);
     });
-    socket.on('deal', function(test){
-      $('#playerHand').text(test.playerHand);
-      $('#dealerHand').text(test.dealerHand);
+    socket.on('updateCards', function(hands){
+      console.log(hands);
+      $('#playerHand').text(hands.playerHand);
+      $('#playerValue').text(hands.playerValue);
+      $('#dealerHand').text(hands.dealerHand);
+      $('#dealerValue').text(hands.dealerValue);
     });
   });
 </script>
@@ -56,16 +59,21 @@
 <div id="game" class="container">
   <div class="row">
     <div class="col-lg-12">
-      <span>Session Name: <span id="name">placeholder</span></span>
+      <h5>Session Name</h5>
+      <span id="name">placeholder</span></span>
     </div>
   </div>
   <br />
   <div class="row">
     <div class="col-lg-6">
-      <span>Player Hand: <span id="playerHand">cards</span></span>
+      <h5>Player</h5>
+      <p><span>Hand: <span id="playerHand">cards</span></span></p>
+      <p><span>Value: <span id="playerValue"></span></span></p>
     </div>
     <div class="col-lg-6">
-      <span>Dealer Hand: <span id="dealerHand">cards</span></span>
+      <h5>Dealer</h5>
+      <p><span>Hand: <span id="dealerHand">cards</span></span></p>
+      <p><span>Value: <span id="dealerValue"></span></span></p>
     </div>
   </div>
 </div>
