@@ -85,6 +85,20 @@ io.on('connection',function(socket){
 
 /* App routes */
 
+app.post('/connect', function(req, res) {
+	var name = req.body.name;
+	var amzUserId = req.body.amzUserId;
+	Game.findOne({name: name}, function(err, game) {
+		if (game) {
+			game.amzUserId = amzUserId;
+			game.save();
+			res.send({"found":true});
+		} else {
+			res.send({"found":false});
+		}
+	})
+});
+
 app.get('/deal/:name', function(req, res) {
 	var hand = blackjack.startNewGame();
 	io.to(req.params.name).emit('updateCards', blackjack);
