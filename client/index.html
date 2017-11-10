@@ -25,6 +25,7 @@
       $('#playerValue').text(hands.playerValue);
       $('#dealerHand').text(hands.dealerHand);
       $('#dealerValue').text(hands.dealerValue);
+      $('#gameStatus').text(hands.gameStatus);
     });
   });
 </script>
@@ -56,24 +57,39 @@
   </nav>
 </div>
 
-<div id="game" class="container">
+<div class="container">
   <div class="row">
     <div class="col-lg-12">
-      <h5>Session Name</h5>
-      <span id="name">placeholder</span></span>
+      <div class="panel panel-info">
+        <div class="panel-heading"><h5>Session</h5></div>
+        <div class="panel-body">
+          <p><b>Session Name: </b><span id="name">placeholder</span></p>
+          <p><b>Game Status: </b><span id="gameStatus">No game started</span></p>
+        </div>
+      </div>
     </div>
   </div>
-  <br />
+</div>
+
+<div class="container">
   <div class="row">
     <div class="col-lg-6">
-      <h5>Player</h5>
-      <p><span>Hand: <span id="playerHand">cards</span></span></p>
-      <p><span>Value: <span id="playerValue"></span></span></p>
+      <div class="panel panel-success">
+        <div class="panel-heading"><h5>Player Hand</h5></div>
+        <div class="panel-body">
+          <p><span id="playerHand"></span></p>
+          <p>Value: <span id="playerValue"></span></p>
+        </div>
+      </div>
     </div>
     <div class="col-lg-6">
-      <h5>Dealer</h5>
-      <p><span>Hand: <span id="dealerHand">cards</span></span></p>
-      <p><span>Value: <span id="dealerValue"></span></span></p>
+      <div class="panel panel-success">
+        <div class="panel-heading"><h5>Dealer Hand</h5></div>
+        <div class="panel-body">
+          <p><span id="dealerHand"></span></p>
+          <p>Value: <span id="dealerValue"></span></p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
