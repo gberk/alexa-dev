@@ -39,45 +39,53 @@ http.listen(process.env.PORT || 3000, function() {
 	console.log("Node server started")
 });
 
+var findUniqueSessionCode = function(){
+	return new Promise(function(resolve,reject){
+		var found = true;
+		var sessionCode;
+		sessionCode = Session.generateName();
+		console.log("checking dupe")
+		Session.findOne({name: sessionCode}, function(err, foundGame) {
+			if (!foundGame) {
+				resolve(sessionCode);
+			}else{
+				findUniqueSessionCode();
+			}
+		})
+	});
+}
 
 
 io.on('connection',function(socket){
 	socket.on('startSession',function(){
-		var found = true;
-		var sessionCode;
-		while (found == true) {
-			// sessionCode = Session.generateName();
-			sessionCode = 1234;
-			Session.findOne({name: sessionCode}, function(err, foundGame) {
-				console.log(foundGame);
-				if (!foundGame) {
-					found = false;
+		findUniqueSessionCode().then(function(result){
+			var session = new Session({
+				name: sessionCode,
+				_id: sessionCode,
+				amzUserId: ""
+			});
+
+			session.save(function(saveErr) {
+				if (saveErr) {
+					console.log(saveErr);
+				} else {
+					console.log("New session created in db");
 				}
+			}).then(function() {
+				socket.join(sessionCode);
+				// console.log("Connected to existing session in db");
+				socket.emit('sessionCode', name);
 			})
-		}
+
+			socket.on('disconnect',function(){
+				// console.log("Game " + name + " ended");
+				game.remove();
+			});
+		}, function(err){
+			console.log(err);
+		});
 		
-		var session = new Session({
-			name: sessionCode,
-			_id: sessionCode,
-			amzUserId: ""
-		});
-
-		session.save(function(saveErr) {
-			if (saveErr) {
-				console.log(saveErr);
-			} else {
-				console.log("New session created in db");
-			}
-		}).then(function() {
-			socket.join(sessionCode);
-			// console.log("Connected to existing session in db");
-			socket.emit('sessionCode', name);
-		})
-
-		socket.on('disconnect',function(){
-			// console.log("Game " + name + " ended");
-			game.remove();
-		});
+		
 	});
 });
 
