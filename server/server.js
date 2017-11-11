@@ -89,12 +89,12 @@ io.on('connection',function(socket){
 /* App routes */
 
 app.post('/connect', function(req, res) {
-	var name = req.body.name;
+	var sessionCode = req.body.sessionCode;
 	var amzUserId = req.body.amzUserId;
-	Game.findOne({name: name}, function(err, game) {
-		if (game) {
-			game.amzUserId = amzUserId;
-			game.save();
+	Session.findOne({name: sessionCode}, function(err, session) {
+		if (session) {
+			session.amzUserId = amzUserId;
+			session.save();
 			res.send({"found":true});
 		} else {
 			res.send({"found":false});
@@ -123,30 +123,3 @@ app.get('/stand/:name', function(req, res) {
 app.get('/', function(req, res){
 	res.sendFile(path.resolve('client/index.html'));
 });
-
-// app.use('/blackjack/*', function(req,res,next){ 
-// 	Game.findOne({name: req.body.name}, function(err, game){
-// 		if(err) next(err);
-// 		else {
-// 			req.game = game;
-// 			next();
-// 		}
-// 	});
-// })
-
-app.get('/score/:name', function(req, res){
-	Game.findOne({name:req.params.name}, function(err,game){
-		res.send(game);
-	});
-});
-
-// app.post('/score', function(req, res){
-// 	var name = req.body.name;
-// 	var score = req.body.score;
-// 	Game.findOne({name: name},function(err,game){
-// 		game.score = score;
-// 		game.save();
-// 		io.to(name).emit('score',score);
-// 	})
-// 	res.end();
-// });
