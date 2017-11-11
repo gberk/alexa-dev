@@ -78,14 +78,23 @@ function Blackjack(){
 	    	{
 	    		game.dealerHand.blackjack = true;
 	    		if(game.playerHand.blackjack)
+                {
 	    			resolve(game.result = "Push");
+                    return;
+                }
 	    		else
+                {
 	    			resolve(game.result = "Dealer wins - Blackjack");
+                    return;
+                }
 	    	}
 
 	    	//Player wins blackjack
 	    	if(game.playerHand.blackjack)
-    			resolve(game.result = "Player wins - Blackjack")
+            {
+    			resolve(game.result = "Player wins - Blackjack");
+                return;
+            }
 	    	
 
 	    	if(game.playerHand.bust){
