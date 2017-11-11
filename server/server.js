@@ -58,7 +58,7 @@ var findUniqueSessionCode = function(){
 
 io.on('connection',function(socket){
 	socket.on('startSession',function(){
-		findUniqueSessionCode().then(function(result){
+		findUniqueSessionCode().then(function(sessionCode){
 			var session = new Session({
 				name: sessionCode,
 				_id: sessionCode,
@@ -74,12 +74,12 @@ io.on('connection',function(socket){
 			}).then(function() {
 				socket.join(sessionCode);
 				// console.log("Connected to existing session in db");
-				socket.emit('sessionCode', name);
+				socket.emit('sessionCode', sessionCode);
 			})
 
 			socket.on('disconnect',function(){
 				// console.log("Game " + name + " ended");
-				game.remove();
+				session.remove();
 			});
 		}, function(err){
 			console.log(err);
