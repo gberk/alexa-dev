@@ -7,7 +7,6 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var Blackjack = require('./models/Blackjack');
-var blackjack = new Blackjack();
 
 require('dotenv').config();
 
@@ -24,6 +23,7 @@ var Game = require('./models/Game');
 var Session = require('./models/Session')
 var db;
 var uri = process.env.DB_URI;
+var blackjackGamesBySession = {};
 
 mongoose.Promise = global.Promise;
 mongoose.connect(uri, {useMongoClient: true}, function(err) {
@@ -61,7 +61,7 @@ io.on('connection',function(socket){
 			var session = new Session({
 				name: sessionCode,
 				_id: sessionCode,
-				amzUserId: ""
+				amzUserId: "",
 			});
 
 			session.save(function(saveErr) {
@@ -71,13 +71,13 @@ io.on('connection',function(socket){
 					console.log("New session created in db");
 				}
 			}).then(function() {
+				blackjackGamesBySession[sessionCode] = new Blackjack();
 				socket.join(sessionCode);
 				// console.log("Connected to existing session in db");
 				socket.emit('sessionCode', sessionCode);
 			})
 
 			socket.on('disconnect',function(){
-				// console.log("Game " + name + " ended");
 				session.remove();
 			});
 		}, function(err){
@@ -103,21 +103,24 @@ app.post('/connect', function(req, res) {
 });
 
 app.get('/deal/:name', function(req, res) {
-	var hand = blackjack.startNewGame();
-	io.to(req.params.name).emit('updateCards', blackjack);
-	res.send(blackjack);
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.startNewGame();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
 })
 
 app.get('/hit/:name', function(req, res) {
-	var hand = blackjack.hit();
-	io.to(req.params.name).emit('updateCards', blackjack);
-	res.send(blackjack);
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.hit();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
 })
 
 app.get('/stand/:name', function(req, res) {
-	var hand = blackjack.stand();
-	io.to(req.params.name).emit('updateCards', blackjack);
-	res.send(blackjack);
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.stand();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
 })
 
 app.get('/', function(req, res){
