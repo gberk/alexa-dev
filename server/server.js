@@ -21,6 +21,7 @@ var gameNames = ['donkey','frog','bear','dog','cat','buffalo','badger','ant','gi
 
 var mongoose = require('mongoose');
 var Game = require('./models/Game');
+var Session = require('./models/Session')
 var db;
 var uri = process.env.DB_URI;
 
@@ -38,46 +39,43 @@ http.listen(process.env.PORT || 3000, function() {
 	console.log("Node server started")
 });
 
+
+
 io.on('connection',function(socket){
 	socket.on('startSession',function(){
-		var name = gameNames[gameNum];
-
-		var game = new Game({
-			name: name,
-			_id: name,
-			score: 0,
+		var found = true;
+		var sessionCode;
+		while (found == true) {
+			// sessionCode = Session.generateName();
+			sessionCode = 1234;
+			Session.findOne({name: sessionCode}, function(err, foundGame) {
+				console.log(foundGame);
+				if (!foundGame) {
+					found = false;
+				}
+			})
+		}
+		
+		var session = new Session({
+			name: sessionCode,
+			_id: sessionCode,
 			amzUserId: ""
 		});
 
-		var found = false;
-		Game.findOne({name: name}, function(err, foundGame) {
-			if (foundGame) {
-				found = true;
+		session.save(function(saveErr) {
+			if (saveErr) {
+				console.log(saveErr);
 			} else {
-				found = false;
+				console.log("New session created in db");
 			}
-		}).then(function(foundGame) {
-			if (found) {
-				socket.join(name);
-				console.log("Connected to existing session in db");
-				gameNum++;
-				socket.emit('gameName', name);
-			} else {
-				game.save(function(saveErr) {
-					if (saveErr) {
-						console.log(saveErr);
-					} else {
-						console.log("New session created in db");
-					}
-				}).then(function(game){
-					socket.join(name);
-					gameNum++;
-					socket.emit('gameName', name);
-				})
-			}
+		}).then(function() {
+			socket.join(sessionCode);
+			// console.log("Connected to existing session in db");
+			socket.emit('sessionCode', name);
 		})
+
 		socket.on('disconnect',function(){
-			console.log("Game " + name + " ended");
+			// console.log("Game " + name + " ended");
 			game.remove();
 		});
 	});

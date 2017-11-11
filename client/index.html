@@ -15,8 +15,8 @@
       console.log('Web browser connected');
       socket.emit('startSession', 'startSession');
     });
-    socket.on('gameName', function(name){
-      console.log("Game name is " + name)
+    socket.on('sessionCode', function(name){
+      console.log("Session code is " + name)
       $('#name').text(name);
     });
     socket.on('updateCards', function(game){
