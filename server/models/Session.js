@@ -14,8 +14,12 @@ var Session = mongoose.model('Session', sessionSchema);
 
 
 Session.generateName = function() {
-  return Math.floor(Math.random() * (10000 - 1000)) + 1000; //The maximum is exclusive and the minimum is inclusive
+	return new Promise(function(resolve,reject){
+	  resolve(Math.floor(Math.random() * (10000 - 1000)) + 1000); //The maximum is exclusive and the minimum is inclusive
+	})
 }
+
+
 
 
 module.exports = Session;
