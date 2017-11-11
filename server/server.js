@@ -44,7 +44,6 @@ var findUniqueSessionCode = function(){
 		var found = true;
 		var sessionCode;
 		sessionCode = Session.generateName();
-		console.log("checking dupe")
 		Session.findOne({name: sessionCode}, function(err, foundGame) {
 			if (!foundGame) {
 				resolve(sessionCode);
@@ -84,8 +83,6 @@ io.on('connection',function(socket){
 		}, function(err){
 			console.log(err);
 		});
-		
-		
 	});
 });
 
