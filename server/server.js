@@ -2,70 +2,84 @@
 'use strict';
 
 var path = require('path');
-
-var express = require('express');
-var app = express();
+var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var Promise = require('bluebird');
 
-app.use(express.static('client'));
+require('dotenv').config();
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-require('dotenv').config();
-
-// Connection to MongoDB Altas via mongoose
 var mongoose = require('mongoose');
-var uri = process.env.DB_URI;
-var atlasdb;
 
-var Balance = require(path.resolve("server/models/balanceSchema.js"));
-var Score = require(path.resolve("server/models/scoreSchema.js"));
+var Blackjack = require('./models/Blackjack');
+var Session = require('./models/Session');
 
-mongoose.connect(uri, {useMongoClient: true}, function(err) {
-	if (err) {
-		console.log("Mongoose error: " + err);
-	} else {
-		atlasdb = mongoose.connection;
-		console.log("Successfully connected to MongoDB Atlas via mongoose");
-	}
-});
+//var uri = process.env.DB_URI;
+var blackjackGamesBySession = {};
 
-app.get('/', function(req, res){
-	res.sendFile(path.resolve('client/index.html'));
-});
-
-// io.on('connection', function(socket){
-//   console.log('a user connected');
-// });
-
-// app.get('/flip', function(req, res){
-// 	io.emit('flip', "FLIPPED");
-// 	res.end();
-// });
-
-app.get('/number', function(req, res) {
-	var number = document.getElementById("numberPlaceholder").value;
-	res.send(number);
-})
-
-app.post('/score', function(req, res){
-	Score.remove({},function(){
-		Score.create({score: req.body.score}, function(err, score){
-			if (!err) console.log("Saved score: " + req.body.score);
-			res.send(score);
+var findUniqueSessionCode = function(){
+	return new Promise(function(resolve,reject){
+		var sessionCode = Session.generateName().then(function(sessionCode){
+			if(!blackjackGamesBySession[sessionCode])
+				resolve(sessionCode);				
+			else
+				findUniqueSessionCode();
 		});
 	});
+}
+
+http.listen(process.env.PORT || 3000, function() {
+	console.log("Node server started")
 });
 
-app.get('/score', function(req, res){
-	Score.findOne(function(err, doc){
-		res.send(doc);
+io.on('connection',function(socket){
+	socket.on('startSession',function(){
+		findUniqueSessionCode().then(function(sessionCode){
+			blackjackGamesBySession[sessionCode] = new Blackjack();
+			socket.join(sessionCode);
+			socket.emit('sessionCode', sessionCode);
+			socket.on('disconnect',function(){
+				delete blackjackGamesBySession[sessionCode];
+			});
+		});
 	})
 });
 
-http.listen(process.env.PORT || 3000, function(){
-	console.log('listening on *:3000');
+/* App routes */
+
+app.post('/connect', function(req, res) {
+	var sessionCode = req.body.sessionCode;
+	if(blackjackGamesBySession[sessionCode])
+		res.send({"found":true})
+	else
+		res.send({"found":false});
+});
+
+app.get('/deal/:name', function(req, res) {
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.startNewGame();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
+})
+
+app.get('/hit/:name', function(req, res) {
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.hit();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
+})
+
+app.get('/stand/:name', function(req, res) {
+		var blackjack = blackjackGamesBySession[req.params.name];
+		blackjack.stand();
+		io.to(req.params.name).emit('updateCards', blackjack);
+		res.send(blackjack);
+})
+
+app.get('/', function(req, res){
+	res.sendFile(path.resolve('client/index.html'));
 });
